@@ -1,0 +1,51 @@
+--- ext/openssl/ossl.c	2018-10-17 18:26:54.000000000 +0300
++++ ext/openssl/ossl.c	2018-11-22 21:18:02.778678303 +0300
+@@ -1114,6 +1114,7 @@
+     if (!OPENSSL_init_ssl(0, NULL))
+         rb_raise(rb_eRuntimeError, "OPENSSL_init_ssl");
+ #else
++    OPENSSL_config(NULL); /* Makes Ruby respect system OpenSSL config */
+     OpenSSL_add_ssl_algorithms();
+     OpenSSL_add_all_algorithms();
+     ERR_load_crypto_strings();
+--- ext/openssl/ossl_pkey.c	2018-10-17 18:26:54.000000000 +0300
++++ ext/openssl/ossl_pkey.c	2018-11-22 21:30:47.163067601 +0300
+@@ -115,6 +115,7 @@
+ 	return ossl_dh_new(pkey);
+ #endif
+ #if !defined(OPENSSL_NO_EC)
++    case NID_id_GostR3410_2001:
+     case EVP_PKEY_EC:
+ 	return ossl_ec_new(pkey);
+ #endif
+--- ext/openssl/ossl_pkey_ec.c	2018-10-17 18:26:54.000000000 +0300
++++ ext/openssl/ossl_pkey_ec.c	2018-11-22 21:35:07.720080833 +0300
+@@ -14,7 +14,7 @@
+
+ #define GetPKeyEC(obj, pkey) do { \
+     GetPKey((obj), (pkey)); \
+-    if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) { \
++    if ((EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2001)) { \
+ 	ossl_raise(rb_eRuntimeError, "THIS IS NOT A EC PKEY!"); \
+     } \
+ } while (0)
+@@ -92,7 +92,7 @@
+ 	obj = ec_instance(cEC, EC_KEY_new());
+     } else {
+ 	obj = NewPKey(cEC);
+-	if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) {
++	if ((EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2001)) {
+ 	    ossl_raise(rb_eTypeError, "Not a EC key!");
+ 	}
+ 	SetPKey(obj, pkey);
+--- ext/openssl/lib/openssl/ssl.rb	2017-11-25 17:12:07.000000000 +0300
++++ ext/openssl/lib/openssl/ssl.rb	2018-11-22 21:38:28.640840931 +0300
+@@ -51,6 +51,8 @@
+            OpenSSL::OPENSSL_VERSION_NUMBER >= 0x10100000)
+         DEFAULT_PARAMS.merge!(
+           ciphers: %w{
++            GOST2001-GOST89-GOST89
++            GOST2012-GOST8912-GOST8912
+             ECDHE-ECDSA-AES128-GCM-SHA256
+             ECDHE-RSA-AES128-GCM-SHA256
+             ECDHE-ECDSA-AES256-GCM-SHA384
