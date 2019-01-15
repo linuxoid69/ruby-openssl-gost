@@ -2,6 +2,8 @@ FROM rnix/openssl-gost:stretch
 
 COPY openssl.patch /tmp
 
+COPY rootfs /
+
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		bzip2 \
@@ -12,7 +14,11 @@ RUN apt-get update \
 		libyaml-dev \
 		procps \
 		zlib1g-dev \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& cd /mnt \
+	&& tar xfv cryptopro-4.0-amd64_deb.tgz \
+	&& sh linux-amd64_deb/install.sh \
+	&& dpkg -i /mnt/cprocsp-cpopenssl-110-gost-64_4.0.0-5_amd64.deb
 
 # skip installing gem documentation
 RUN mkdir -p /usr/local/etc \
@@ -88,7 +94,8 @@ RUN set -ex \
 	\
 	&& gem update --system "$RUBYGEMS_VERSION" \
 	&& gem install bundler --version "$BUNDLER_VERSION" --force \
-	&& rm -r /root/.gem/
+	&& rm -r /root/.gem/ \
+	&& rm -rf /mnt/*
 
 # install things globally, for great justice
 # and don't create ".bundle" in all our apps
