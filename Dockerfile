@@ -1,6 +1,12 @@
 FROM rnix/openssl-gost:stretch
 
-COPY openssl.patch /tmp
+ENV RUBY_MAJOR 2.5
+ENV RUBY_VERSION 2.5.5
+ENV RUBY_DOWNLOAD_SHA256 1cc9d0359a8ea35fc6111ec830d12e60168f3b9b305a3c2578357d360fcf306f
+ENV RUBYGEMS_VERSION 2.7.8
+ENV BUNDLER_VERSION 1.17.3
+
+COPY openssl-$RUBY_MAJOR.patch /tmp
 
 COPY rootfs /
 
@@ -26,12 +32,6 @@ RUN mkdir -p /usr/local/etc \
 		echo 'install: --no-document'; \
 		echo 'update: --no-document'; \
 	} >> /usr/local/etc/gemrc
-
-ENV RUBY_MAJOR 2.5
-ENV RUBY_VERSION 2.5.5
-ENV RUBY_DOWNLOAD_SHA256 1cc9d0359a8ea35fc6111ec830d12e60168f3b9b305a3c2578357d360fcf306f
-ENV RUBYGEMS_VERSION 2.7.8
-ENV BUNDLER_VERSION 1.17.3
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
