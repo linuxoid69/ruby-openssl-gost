@@ -1,0 +1,86 @@
+--- ext/openssl/lib/openssl/ssl.rb
++++ ext/openssl/lib/openssl/ssl.rb
+@@ -51,6 +51,8 @@ class SSLContext
+            OpenSSL::OPENSSL_VERSION_NUMBER >= 0x10100000)
+         DEFAULT_PARAMS.merge!(
+           ciphers: %w{
++            GOST2001-GOST89-GOST89
++            GOST94-GOST89-GOST89
+             ECDHE-ECDSA-AES128-GCM-SHA256
+             ECDHE-RSA-AES128-GCM-SHA256
+             ECDHE-ECDSA-AES256-GCM-SHA384
+--- ext/openssl/ossl.c
++++ ext/openssl/ossl.c
+@@ -1111,13 +1111,14 @@ Init_openssl(void)
+      * Init all digests, ciphers
+      */
+ #if !defined(LIBRESSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x10100000
+-    if (!OPENSSL_init_ssl(0, NULL))
++    if (!OPENSSL_init_ssl(OPENSSL_INIT_LOAD_CONFIG, NULL))
+         rb_raise(rb_eRuntimeError, "OPENSSL_init_ssl");
+ #else
+     OpenSSL_add_ssl_algorithms();
+     OpenSSL_add_all_algorithms();
+     ERR_load_crypto_strings();
+     SSL_load_error_strings();
++    OPENSSL_config(NULL);
+ #endif
+ 
+     /*
+--- ext/openssl/ossl_pkey.c
++++ ext/openssl/ossl_pkey.c
+@@ -115,6 +115,11 @@ pkey_new0(EVP_PKEY *pkey)
+ 	return ossl_dh_new(pkey);
+ #endif
+ #if !defined(OPENSSL_NO_EC)
++    case NID_id_GostR3410_2001:
++#if defined(NID_id_GostR3410_2012_256)
++    case NID_id_GostR3410_2012_256:
++    case NID_id_GostR3410_2012_512:
++#endif
+     case EVP_PKEY_EC:
+ 	return ossl_ec_new(pkey);
+ #endif
+--- ext/openssl/ossl_pkey_ec.c
++++ ext/openssl/ossl_pkey_ec.c
+@@ -12,12 +12,22 @@
+ static const rb_data_type_t ossl_ec_group_type;
+ static const rb_data_type_t ossl_ec_point_type;
+ 
++#if defined(NID_id_GostR3410_2012_256)
+ #define GetPKeyEC(obj, pkey) do { \
+     GetPKey((obj), (pkey)); \
+-    if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) { \
++    if ((EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2001) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2012_256) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2012_512)) { \
+ 	ossl_raise(rb_eRuntimeError, "THIS IS NOT A EC PKEY!"); \
+     } \
+ } while (0)
++#else
++#define GetPKeyEC(obj, pkey) do { \
++    GetPKey((obj), (pkey)); \
++    if ((EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2001)) { \
++	ossl_raise(rb_eRuntimeError, "THIS IS NOT A EC PKEY!"); \
++    } \
++} while (0)
++#endif
++
+ #define GetEC(obj, key) do { \
+     EVP_PKEY *_pkey; \
+     GetPKeyEC(obj, _pkey); \
+@@ -92,9 +102,15 @@ VALUE ossl_ec_new(EVP_PKEY *pkey)
+ 	obj = ec_instance(cEC, EC_KEY_new());
+     } else {
+ 	obj = NewPKey(cEC);
+-	if (EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) {
++#if defined(NID_id_GostR3410_2012_256)
++	if ((EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2001) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2012_256) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2012_512)) {
+ 	    ossl_raise(rb_eTypeError, "Not a EC key!");
+ 	}
++#else
++        if ((EVP_PKEY_base_id(pkey) != EVP_PKEY_EC) && (EVP_PKEY_base_id(pkey) != NID_id_GostR3410_2001)) {
++	    ossl_raise(rb_eTypeError, "Not a EC key!");
++	}
++#endif
+ 	SetPKey(obj, pkey);
+     }
+     if (obj == Qfalse) {
