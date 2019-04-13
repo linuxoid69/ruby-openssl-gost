@@ -1,4 +1,4 @@
-FROM rnix/openssl-gost:1.1.0j
+FROM rnix/openssl-gost:stretch
 
 ENV RUBY_MAJOR 2.5
 ENV RUBY_VERSION 2.5.5
