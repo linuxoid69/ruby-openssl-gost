@@ -1,4 +1,4 @@
-FROM rnix/openssl-gost:stretch
+FROM rnix/openssl-gost:1.1.0j
 
 ENV RUBY_MAJOR 2.5
 ENV RUBY_VERSION 2.5.5
@@ -24,7 +24,7 @@ RUN apt-get update \
 	&& cd /mnt \
 	&& tar xfv cryptopro-4.0-amd64_deb.tgz \
 	&& sh linux-amd64_deb/install.sh \
-	&& dpkg -i /mnt/cprocsp-cpopenssl-110-gost-64_5.0.11216-5_amd64.deb # --ignore-depends=lsb-cprocsp-capilite-64 /mnt/cprocsp-cpopenssl-110-gost-64_5.0.11315-5_amd64.deb # /mnt/cprocsp-cpopenssl-110-gost-64_4.0.0-5_amd64.deb
+	&& dpkg -i /mnt/cprocsp-cpopenssl-110-gost-64_5.0.11216-5_amd64.deb
 
 # skip installing gem documentation
 RUN mkdir -p /usr/local/etc \
