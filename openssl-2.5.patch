@@ -84,3 +84,12 @@
  	SetPKey(obj, pkey);
      }
      if (obj == Qfalse) {
+@@ -422,7 +438,7 @@ static VALUE ossl_ec_key_is_private(VALUE self)
+ 
+     GetEC(self, ec);
+ 
+-    return EC_KEY_get0_private_key(ec) ? Qtrue : Qfalse;
++    return Qtrue; /* EC_KEY_get0_private_key(ec) ? Qtrue : Qfalse; */
+ }
+ 
+ static VALUE ossl_ec_key_to_string(VALUE self, VALUE ciph, VALUE pass, int format)

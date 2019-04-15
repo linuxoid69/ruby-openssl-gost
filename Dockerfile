@@ -24,7 +24,7 @@ RUN apt-get update \
 	&& cd /mnt \
 	&& tar xfv cryptopro-4.0-amd64_deb.tgz \
 	&& sh linux-amd64_deb/install.sh \
-	&& dpkg -i /mnt/cprocsp-cpopenssl-110-gost-64_4.0.0-5_amd64.deb
+	&& dpkg -i /mnt/cprocsp-cpopenssl-110-gost-64_5.0.11216-5_amd64.deb
 
 # skip installing gem documentation
 RUN mkdir -p /usr/local/etc \
