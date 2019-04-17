@@ -93,9 +93,10 @@ RUN set -ex \
 	&& apt-get purge -y --auto-remove $buildDeps \
 	&& cd / \
 	&& rm -r /usr/src/ruby \
-	\
 	&& gem update --system "$RUBYGEMS_VERSION" \
 	&& gem install bundler --version "$BUNDLER_VERSION" --force \
+	&& chmod +x /mnt/config_ssl.sh \
+	&& sh /mnt/config_ssl.sh \
 	&& rm -r /root/.gem/ \
 	&& rm -rf /mnt/*
 
