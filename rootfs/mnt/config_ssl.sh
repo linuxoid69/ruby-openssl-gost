@@ -12,4 +12,4 @@ EOF
 
 LINE_SECTION=$(grep -n '\[engine_section\]' $CONFIG | cut -f 1 -d ':')
 
-sed -i "${LINE_SECTION}a gostengy_section" $CONFIG
+sed -i "${LINE_SECTION}a gostengy = gostengy_section" $CONFIG
